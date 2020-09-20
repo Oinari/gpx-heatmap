@@ -36,7 +36,7 @@ Use gpx;
 
 CREATE TABLE trips
 (
-point_datetime DateTime,
+point_datetime DateTime64,
 point_longitude Float64,
 point_latitude Float64,
 point_elevation Float64
