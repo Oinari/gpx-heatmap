@@ -22,11 +22,11 @@ https://www.strava.com/heatmap
 Поставил clickhouse в докере
 ```
 $ mkdir $HOME/clickhouse_test_db
-$ docker run -d --name some-clickhouse-server --ulimit nofile=262144:262144 --volume=$HOME/clickhouse_test_db:/var/lib/clickhouse yandex/clickhouse-server 
+$ docker run -d --name gpx-clickhouse-server --ulimit nofile=262144:262144 --volume=$HOME/clickhouse_test_db:/var/lib/clickhouse -p 8123:8123 yandex/clickhouse-server 
 ```
 Клиент пока там же
 ```
-$ docker run -it --rm --link some-clickhouse-server:clickhouse-server yandex/clickhouse-client --host clickhouse-server
+$ docker run -it --rm --link gpx-clickhouse-server:clickhouse-server yandex/clickhouse-client --host clickhouse-server
 ```
 
 База и таблица пока такие
@@ -50,4 +50,9 @@ ORDER BY (point_longitude, point_latitude)
 Тест единичной записью
 ```
 INSERT INTO trips Values ('2020-01-01 00:00:00', 57.9921901, 56.2471849, 156.8)
+```
+Можно дёргать инфу через HTTP
+```
+echo 'SELECT * from gpx.trips' | curl 'http://localhost:8123/?query=' --data-binary @-
+2020-01-01 00:00:00	57.9921901	56.2471849	156.8
 ```
