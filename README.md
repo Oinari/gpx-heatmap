@@ -22,7 +22,7 @@ https://www.strava.com/heatmap
 Поставил clickhouse в докере
 ```
 $ mkdir $HOME/clickhouse_test_db
-$ docker run -d --name gpx-clickhouse-server --ulimit nofile=262144:262144 --volume=$HOME/clickhouse_test_db:/var/lib/clickhouse -p 8123:8123 yandex/clickhouse-server 
+$ docker run -d --name gpx-clickhouse-server --ulimit nofile=262144:262144 --volume=$HOME/clickhouse_test_db:/var/lib/clickhouse -p 8123:8123 -p 9000:9000 yandex/clickhouse-server 
 ```
 Клиент пока там же
 ```
@@ -55,4 +55,38 @@ INSERT INTO trips Values ('2020-01-01 00:00:00', 57.9921901, 56.2471849, 156.8)
 ```
 echo 'SELECT * from gpx.trips' | curl 'http://localhost:8123/?query=' --data-binary @-
 2020-01-01 00:00:00	57.9921901	56.2471849	156.8
+```
+
+Кастельно загрузки данных в БД, Филонов из БКС использовал такую конструкцию, то есть TabSeparated
+```
+nf2nat -l -r $F -o $DST -t  | xin  -l 400000 -e POST 'http://flower3:8123/?database=nel&query=insert%20into%20natdata%20FORMAT%20TabSeparated'  && rm $P/nfcapd$D
+```
+https://clickhouse.tech/docs/ru/interfaces/formats/ - форматы ввода/вывода
+xin - софтинка, Xin reads from standard input splitting the data up into sections. Each section is piped into a command separately.
+http://www.kyne.com.au/~mark/software.html
+
+
+KISS линупсовый. Формат даты только кривой.
+Можно в таблице DateTime64.
+```
+xml2 < 1880151519.gpx | 2csv trkpt time @lat @lon ele
+2018-08-05T15:20:29.999Z,57.99231,56.24651,171
+2018-08-05T15:20:30.999Z,57.99231,56.24651,171
+2018-08-05T15:20:31.999Z,57.99231,56.24651,171
+```
+Впилил импорт данных через XML->CSV и загрузку через clickhouse-client
+```
+find ./ -iname "*.gpx" -exec ./xml2csv.sh {} \; > full.csv
+sed -i 's/Z//g' full.csv
+docker run --link gpx-clickhouse-server:clickhouse-server -i yandex/clickhouse-client --host clickhouse-server --query="INSERT INTO gpx.trips FORMAT CSV" < ./full.csv
+```
+
+Интересно проверить работу PARTITION
+```
+SELECT 
+    partition,
+    name,
+    active
+FROM system.parts
+WHERE table = 'trips'
 ```
