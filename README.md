@@ -57,9 +57,9 @@ echo 'SELECT * from gpx.trips' | curl 'http://localhost:8123/?query=' --data-bin
 2020-01-01 00:00:00	57.9921901	56.2471849	156.8
 ```
 
-Кастельно загрузки данных в БД, Филонов из БКС использовал такую конструкцию, то есть TabSeparated
+Кастельно загрузки данных в БД, ранее использовали такую конструкцию, то есть TabSeparated
 ```
-nf2nat -l -r $F -o $DST -t  | xin  -l 400000 -e POST 'http://flower3:8123/?database=nel&query=insert%20into%20natdata%20FORMAT%20TabSeparated'  && rm $P/nfcapd$D
+nf2nat -l -r $F -o $DST -t  | xin  -l 400000 -e POST 'http://srv:8123/?database=nel&query=insert%20into%20natdata%20FORMAT%20TabSeparated'  && rm $P/nfcapd$D
 ```
 https://clickhouse.tech/docs/ru/interfaces/formats/ - форматы ввода/вывода
 xin - софтинка, Xin reads from standard input splitting the data up into sections. Each section is piped into a command separately.
